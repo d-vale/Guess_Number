@@ -1,86 +1,72 @@
 "use strict";
 
-//Chiffre aléatoire entre 1-20
-function chiffreAleatoire() {
-  const answerFinal = Math.floor(Math.random() * 20) + 1;
-  return answerFinal;
+//Definir le maximum
+const MAX_NUMBER = 20;
+
+// Sélection des éléments
+const hint = document.querySelector("#hint");
+const answer = document.querySelector("#answer");
+const scoreLabel = document.querySelector("#score");
+const highscoreLabel = document.querySelector("#highscore");
+document.querySelector("#between").textContent = `Between 1 and ${MAX_NUMBER}`;
+
+//Fonction pour créer un nombre aléatoire
+const createRandomNumber = (max) => Math.floor(Math.random() * max) + 1;
+
+//Object du jeu (Logique du jeu)
+const game = {
+    correctAnswer: createRandomNumber(MAX_NUMBER),
+    score : MAX_NUMBER,
+    highscore : 0,
+    isCorrectAnswer(value){
+        this.score--;
+        return this.correctAnswer === value;
+    },
+    setHighscore(){
+        if(this.score > this.highscore){
+            this.highscore = this.score;
+        }
+        return this;
+    },
 }
 
-//Sélection du bouton
-const checkButton = document.querySelector("#check");
-//Sélection du texte
-const text = document.querySelector("p#hint");
-//Sélection du body
-const body = document.querySelector("body");
-//Sélection de la reponse
-const answer = document.querySelector("div#answer");
+const handleCheck =() => {
+    const guess = document.querySelector("#guess");
+    //Mauvaise réponse
+    if(!game.isCorrectAnswer(+guess.value)){
+        //Si c'est pas un nombre valide
+        if(isNaN(guess.value) || guess.value < 1 || guess.value > MAX_NUMBER){
+            hint.textContent = `💀 Guess must be between 1 and ${MAX_NUMBER}`;
+        } else {
+            hint.textContent = guess.value > game.correctAnswer ? "🔻 Too high!" : "🔺 Too low!";
+        }
 
-//Variable pour le chiffre aléatoire
-let answerFinal = chiffreAleatoire();
-//Variable pour le nombre d'essais
-let essais = 0;
-//Variable pour le highScore
-let highScore = Infinity;
+    } else {
+        //Bonne réponse
+        game.setHighscore();
 
-//Function si juste
-function juste() {
-  text.textContent = "Bravo !";
-  body.style.backgroundColor = "green";
-  text.style.color = "white";
-  answer.textContent = answerFinal;
+        document.body.style.backgroundColor = "var(--color-tertiary)";
+        highscoreLabel.textContent = game.highscore;
+        answer.textContent = game.correctAnswer;
+        answer.classList.add("correct");
+        hint.textContent = "🎉 Correct Number !";
+        scoreLabel.textContent = `Highscore: ${game.highscore}`;
+    }
+    scoreLabel.textContent = game.score;
 }
-//Function si trop bas
-function bas() {
-  text.textContent = "Trop bas !";
-  text.style.color = "red";
-}
-//Function si trop haut
-function haut() {
-  text.textContent = "Trop haut !";
-  text.style.color = "red";
-}
-//Function bestScore
-function bestScore() {
-  if (essais < highScore) {
-    highScore = essais;
-    document.querySelector("#highscore").textContent = highScore;
-  } else {
-    document.querySelector("#highscore").textContent = highScore;
-  }
-}
-//Function score
-function score() {
-  document.querySelector("#score").textContent = essais;
-}
-//Mettre le score à 0
-score(); 
 
-//Vérification de la réponse
-checkButton.addEventListener("click", function () {
-  let inputValue = document.querySelector("#guess").value;
-  essais++;
+const handleAgain =() => {
+    game.correctAnswer = createRandomNumber(MAX_NUMBER);
+    game.score = MAX_NUMBER;
 
-  if (inputValue < 1 || inputValue > 20) {
-    text.textContent = "🚨 Veuillez entrer un nombre entre 1 et 20";
-  } else if (inputValue == answerFinal) {
-    juste();
-    bestScore();
-    score();
-  } else if (inputValue < answerFinal) {
-    bas();
-  } else {
-    haut();
-  }
-});
+    document.body.style.backgroundColor = "var(--color-primary)";
+    hint.textContent = "Start guessing...";
+    answer.textContent = "?";
+    answer.classList.remove("correct");
+    scoreLabel.textContent = game.score;
+}
 
-//Recommencer
-document.querySelector("#again").addEventListener("click", function () {
-  answerFinal = chiffreAleatoire();
-  answer.textContent = "?";
-  text.textContent = "Start guessing...";
-  body.style.backgroundColor = "#222";
-  text.style.color = "white";
-  document.querySelector("#guess").value = "";
-  essais = 0;
-  score();
-});
+
+//Changement des messages
+document.querySelector("#check").addEventListener("click",  handleCheck);
+document.querySelector("#again").addEventListener("click", handleAgain);
